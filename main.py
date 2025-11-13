@@ -5,7 +5,7 @@ import os
 import time
 from queue import Queue
 
-def run_ping(ip, results, quiet=False, stop_event=None):
+def run_ping(ip, results, verbose=False, stop_event=None):
     """Run ping with 0.2s interval and collect results."""
     process = subprocess.Popen(
         ["ping", ip, "-i", "0.2"],
@@ -19,7 +19,7 @@ def run_ping(ip, results, quiet=False, stop_event=None):
             if stop_event and stop_event.is_set():
                 break
             line = line.strip()
-            if not quiet:
+            if verbose:
                 print(f"[PING] {line}")
             results.put(line)
     except KeyboardInterrupt:
@@ -38,13 +38,13 @@ def run_ping(ip, results, quiet=False, stop_event=None):
             for line in remaining.split('\n'):
                 line = line.strip()
                 if line:
-                    if not quiet:
+                    if verbose:
                         print(f"[PING] {line}")
                     results.put(line)
         except:
             pass
 
-def run_iperf3(ip, duration, results, quiet=False):
+def run_iperf3(ip, duration, results, verbose=False):
     """Run iperf3 bidirectional test and collect results."""
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
@@ -60,7 +60,7 @@ def run_iperf3(ip, duration, results, quiet=False):
     try:
         for line in process.stdout:
             line = line.strip()
-            if not quiet:
+            if verbose:
                 print(f"[IPERF3] {line}")
             results.put(line)
     except KeyboardInterrupt:
@@ -184,15 +184,15 @@ def progress_bar(duration):
     print(f"Elapsed: {seconds_to_hms(duration)} | Remaining: {seconds_to_hms(0)}")
     
 if __name__ == "__main__":
-    quiet_mode = False
+    verbose_mode = False
     args = sys.argv[1:]
 
-    if "-c" in args:
-        quiet_mode = True
-        args.remove("-c")
+    if "-v" in args:
+        verbose_mode = True
+        args.remove("-v")
 
     if len(args) != 2:
-        print(f"Usage: {sys.argv[0]} [-c] <ip> <time>")
+        print(f"Usage: {sys.argv[0]} [-v] <ip> <time>")
         sys.exit(1)
 
     ip = args[0]
@@ -202,13 +202,13 @@ if __name__ == "__main__":
     iperf_results = Queue()
     stop_event = threading.Event()
 
-    ping_thread = threading.Thread(target=run_ping, args=(ip, ping_results, quiet_mode, stop_event), daemon=True)
-    iperf_thread = threading.Thread(target=run_iperf3, args=(ip, duration, iperf_results, quiet_mode))
+    ping_thread = threading.Thread(target=run_ping, args=(ip, ping_results, verbose_mode, stop_event), daemon=True)
+    iperf_thread = threading.Thread(target=run_iperf3, args=(ip, duration, iperf_results, verbose_mode))
 
     ping_thread.start()
     iperf_thread.start()
 
-    if quiet_mode:
+    if not verbose_mode:
         progress_bar(duration)
 
     iperf_thread.join()
