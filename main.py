@@ -96,6 +96,14 @@ def summarize_ping(ping_lines):
         result = []
         result.append(f"Transmitted: {transmitted}")
         result.append(f"Received: {received}")
+        
+        # Calculate lost packet count
+        try:
+            lost_count = int(transmitted) - int(received)
+            result.append(f"Lost: {lost_count}")
+        except (ValueError, TypeError):
+            pass
+        
         result.append(f"Packet Loss: {loss}%")
         result.append(f"Minimum RTT: {min_latency} ms" if min_latency else "Minimum RTT: N/A")
         result.append(f"Maximum RTT: {max_latency} ms" if max_latency else "Maximum RTT: N/A")
