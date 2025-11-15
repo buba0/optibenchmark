@@ -7,3 +7,4 @@ run test on 192.168.10.6 for 10 minutes
 `python3 main.py 192.168.10.6 600`
 
 run with `-v` to see verbose output
+`python3 main.py -v 192.168.10.6 600`
